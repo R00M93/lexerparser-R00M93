@@ -25,7 +25,6 @@ public class Parser{
   
   boolean parseAssignment() {
     Token token = nextToken();
-    
     if (token.getType() == "EOF") {
       return true;
 	}
@@ -92,9 +91,14 @@ public class Parser{
 	      return false;
 		}
 	  } else if (token.getType() == "PLUS" && f) {
-		f = false;
-		token = nextToken();
-		continue;
+	    if (f){
+		  f = false;
+		  token = nextToken();
+		  continue;
+		} else {
+	      s = "Error: Expecting identifier or integer, line " + String.valueOf(token.getLine());
+		  return false;
+		}
 	  } else {
 	    s = "Error: Expecting identifier or integer, line " + String.valueOf(token.getLine());
 	    return false;
@@ -133,9 +137,6 @@ public class Parser{
       System.out.println(parser.s);
       System.out.println("Invalid Program");
 	}
- 
   }
-  
- 
 }
 
