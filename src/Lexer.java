@@ -1,4 +1,3 @@
-import javax.print.DocFlavor;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,14 +16,19 @@ import java.util.Scanner;
  */
 public class Lexer {
   
-  String buffer;
-  int index = 0;
-  int lineN = 1;
-
+  private String buffer;
+  private int index = 0; // the index in buffer
+  private int lineN = 1; // data member for line
+  
   public static final String INTTOKEN = "INT";
   public static final String IDTOKEN = "ID";
   public static final String ASSMTTOKEN = "ASSMT";
   public static final String PLUSTOKEN = "PLUS";
+  /*  public static final String MULTITOKEN = "MULTI"; //*
+	public static final String DIVIDETOKEN = "DIVIDE"; // /
+	public static final String LBRACKETTOKEN = "LBRACKET"; // (
+	public static final String RBRACKETTOKEN = "RBRACKET"; // )
+	*/
   public static final String EOFTOKEN = "EOF";
   
   /**
@@ -58,35 +62,49 @@ public class Lexer {
   }
   
   public Token getNextToken() {
-	String s = "";
-	
+	boolean f = false;
+	boolean lineF = true;
 	while (index < buffer.length() && ((int) buffer.charAt(index) == 32 || (int) buffer.charAt(index) == 13 || (int) buffer.charAt(index) == 9 || (int) buffer.charAt(index) == 10)) {
-	  if ((int) buffer.charAt(index) == 13) {
-	    lineN += 1;
-	    //System.out.println(lineN);
+	  // if met the space and nextline, increase the index
+	  if (((int) buffer.charAt(index) == 13 || (int) buffer.charAt(index) == 10) && lineF) { // solve the problem of '\n\r'
+		lineN += 1; // set the line for each token
+		lineF = false;
 	  }
 	  index += 1;
 	}
-	if (index == buffer.length() - 1 || index == buffer.length())
+	if (index == buffer.length() - 1 || index == buffer.length()) // get the end of file token
 	  return new Token(EOFTOKEN, "-", lineN);
 	char c = buffer.charAt(index);
 	if (Character.isLetter(c)) {
-	  return new Token(IDTOKEN, getIdentifier(), lineN);
+	  return new Token(IDTOKEN, getIdentifier(), lineN); // get the ID token
 	} else if (Character.isDigit(c)) {
-	  return new Token(INTTOKEN, getInteger(), lineN);
+	  return new Token(INTTOKEN, getInteger(), lineN); //get the INT token
 	} else if (c == '=') {
 	  index += 1;
-	  return new Token(ASSMTTOKEN, "=", lineN);
+	  return new Token(ASSMTTOKEN, "=", lineN); //get the = token
 	} else if (c == '+') {
 	  index += 1;
-	  return new Token(PLUSTOKEN, "+", lineN);
-	} else {
+	  return new Token(PLUSTOKEN, "+", lineN); // get the + token
+	} /*else if (c == '*') {
 	  index += 1;
-	  return new Token("UNKNOWN", Character.toString(c), lineN);
+	  return new Token(MULTITOKEN, "*", lineN); // get the * token
+	} else if (c == '/') {
+	  index += 1;
+	  return new Token(DIVIDETOKEN, "/", lineN); // get the / token
+	} else if (c == '(') {
+	  index += 1;
+	  return new Token(LBRACKETTOKEN, "(", lineN); // get the ( token
+	} else if (c == ')') {
+	  index += 1;
+	  return new Token(RBRACKETTOKEN, ")", lineN); // get the ) token
+	}
+	*/ else {
+	  index += 1;
+	  return new Token("UNKNOWN", Character.toString(c), lineN); // get the unknown token
 	}
   }
   
-  private String getIdentifier() {
+  private String getIdentifier() { //get the ID from buffer
 	int i = index;
 	i += 1;
 	while (Character.isLetter(buffer.charAt(i)) || Character.isDigit(buffer.charAt(i))) {
@@ -97,7 +115,7 @@ public class Lexer {
 	return s;
   }
   
-  private String getInteger() {
+  private String getInteger() { //get the INT from buffer
 	int i = index;
 	i += 1;
 	while (Character.isDigit(buffer.charAt(i))) {
@@ -108,32 +126,32 @@ public class Lexer {
 	return s;
   }
   
-  List<Token> getAllTokens() {
+  public List<Token> getAllTokens() {
 	boolean f = false;
 	List<Token> Tokens = new ArrayList<Token>();
 	while (!f) {
 	  Token t = getNextToken();
 	  String s = t.getValue();
-	 
 	  
-	  if (s != "-") {
+	  
+	  if (s != "-") { // is not the end of the file
 		Tokens.add(t);
 		System.out.println(t.toString());
 	  } else {
-	    Tokens.add(t);
-	    System.out.println(t.toString());
-		f = true;
+		Tokens.add(t);
+		System.out.println(t.toString());
+		f = true; // set the f to exit the while loop
 	  }
 	}
 	return Tokens;
   }
   
   public static void main(String[] args) {
-	String fileName = "testId.txt";
+	String fileName = "testNew.txt";
 	if (args.length == 0) {
 	  System.out.println("You must specify a file name");
 	} else {
-	  
+	
 	  fileName = args[0];
 	}
 	Lexer lexer = new Lexer(fileName);
@@ -141,4 +159,5 @@ public class Lexer {
 	List<Token> l = lexer.getAllTokens();
 	System.out.println(l);
   }
+  
 }
