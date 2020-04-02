@@ -47,7 +47,7 @@ public class ByteCodeInterpreter {
 	return bytecode;
   }
   
-  public void remove() {
+  public void remove() { // remove the last two bytecode
 	bytecode.remove(bytecode.size() - 1);
 	bytecode.remove(bytecode.size() - 1);
   }

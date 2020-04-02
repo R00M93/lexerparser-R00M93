@@ -87,7 +87,7 @@ public class Lexer {
 	  return new Token(MULTITOKEN, "*", lineN); // get the * token
 	} else if (c == '-') {
 	  index += 1;
-	  return new Token(MINUSTOKEN, "-", lineN);
+	  return new Token(MINUSTOKEN, "-", lineN);  // get the - token
 	} else {
 	  index += 1;
 	  return new Token("UNKNOWN", Character.toString(c), lineN); // get the unknown token

@@ -96,15 +96,15 @@ public class Parser {
 			return false;
 		  } else if (token.getType() == "ID" && symbolTable.getAddress(token.getValue()) != -1) { //add another else if for valid ID
 			bi.generate(ByteCodeInterpreter.LOAD, symbolTable.getAddress(token.getValue())); // add command to the bytecode arraylist for ID
-			Token next = allTokens.get(index + 1);
-			Token prev = allTokens.get(index - 1);
-			if (prev.getType() == "MULTI" || next.getType() == "MULTI") {
-			  bi.remove();
-			  x *= bi.getMemory().get(symbolTable.getAddress(token.getValue()));
-			} else if (next.getType() == "PLUS" && x != 1) {
+			Token next = allTokens.get(index + 1); //get the next token
+			Token prev = allTokens.get(index - 1); //get the previous token
+			if (prev.getType() == "MULTI" || next.getType() == "MULTI") { //when the previous or next token is *
+			  bi.remove(); // remove the last two bytecode
+			  x *= bi.getMemory().get(symbolTable.getAddress(token.getValue())); // gets the value after multiplying
+			} else if (next.getType() == "PLUS" && x != 1) { //ends the Multiply process
 			  bi.generate(ByteCodeInterpreter.LOADI, x);
 			  x = 1;
-			} else if (prev.getType() == "MINUS") {
+			} else if (prev.getType() == "MINUS") { //for minus operator
 			  bi.remove();
 			  bi.generate(ByteCodeInterpreter.LOADI, bi.getMemory().get(symbolTable.getAddress(token.getValue())) * -1);
 			}
