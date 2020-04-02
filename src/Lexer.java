@@ -24,11 +24,8 @@ public class Lexer {
   public static final String IDTOKEN = "ID";
   public static final String ASSMTTOKEN = "ASSMT";
   public static final String PLUSTOKEN = "PLUS";
-  /*  public static final String MULTITOKEN = "MULTI"; //*
-	public static final String DIVIDETOKEN = "DIVIDE"; // /
-	public static final String LBRACKETTOKEN = "LBRACKET"; // (
-	public static final String RBRACKETTOKEN = "RBRACKET"; // )
-	*/
+  public static final String MULTITOKEN = "MULTI"; //*
+  public static final String MINUSTOKEN = "MINUS"; //-
   public static final String EOFTOKEN = "EOF";
   
   /**
@@ -73,7 +70,7 @@ public class Lexer {
 	  index += 1;
 	}
 	if (index == buffer.length() - 1 || index == buffer.length()) // get the end of file token
-	  return new Token(EOFTOKEN, "-", lineN);
+	  return new Token(EOFTOKEN, "EOF", lineN);
 	char c = buffer.charAt(index);
 	if (Character.isLetter(c)) {
 	  return new Token(IDTOKEN, getIdentifier(), lineN); // get the ID token
@@ -85,20 +82,13 @@ public class Lexer {
 	} else if (c == '+') {
 	  index += 1;
 	  return new Token(PLUSTOKEN, "+", lineN); // get the + token
-	} /*else if (c == '*') {
+	} else if (c == '*') {
 	  index += 1;
 	  return new Token(MULTITOKEN, "*", lineN); // get the * token
-	} else if (c == '/') {
+	} else if (c == '-') {
 	  index += 1;
-	  return new Token(DIVIDETOKEN, "/", lineN); // get the / token
-	} else if (c == '(') {
-	  index += 1;
-	  return new Token(LBRACKETTOKEN, "(", lineN); // get the ( token
-	} else if (c == ')') {
-	  index += 1;
-	  return new Token(RBRACKETTOKEN, ")", lineN); // get the ) token
-	}
-	*/ else {
+	  return new Token(MINUSTOKEN, "-", lineN);
+	} else {
 	  index += 1;
 	  return new Token("UNKNOWN", Character.toString(c), lineN); // get the unknown token
 	}
@@ -134,7 +124,7 @@ public class Lexer {
 	  String s = t.getValue();
 	  
 	  
-	  if (s != "-") { // is not the end of the file
+	  if (s != "EOF") { // is not the end of the file
 		Tokens.add(t);
 		System.out.println(t.toString());
 	  } else {

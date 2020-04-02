@@ -22,6 +22,7 @@ public class ByteCodeInterpreter {
   }
   
   public void run() {
+    memory.clear();
 	for (int i = 0; i < bytecode.size(); i += 2) {
 	  if (bytecode.get(i) == LOAD) { // for LOAD command
 		accumulator += memory.get(bytecode.get(i + 1));
@@ -44,6 +45,15 @@ public class ByteCodeInterpreter {
   
   public ArrayList<Integer> getBytecode() {
 	return bytecode;
+  }
+  
+  public void remove() {
+	bytecode.remove(bytecode.size() - 1);
+	bytecode.remove(bytecode.size() - 1);
+  }
+  
+  public ArrayList<Integer> getMemory() {
+	return memory;
   }
   
   @Override

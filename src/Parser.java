@@ -1,3 +1,4 @@
+import javax.swing.plaf.synth.SynthScrollBarUI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class Parser {
   private String s; // store the error type
   
   public Parser() {
-	Lexer lexer = new Lexer("test.txt");
+	Lexer lexer = new Lexer("testNew.txt");
 	allTokens = lexer.getAllTokens();
   }
   
@@ -46,12 +47,13 @@ public class Parser {
 	} else if (loopTime % 3 == 2) { // parse the expression
 	  if (parseExpression(token)) {
 		bi.generate(ByteCodeInterpreter.STORE, symbolTable.getAddress(storeToken.getValue())); // execute the store command
+		bi.run();
 		return true;
 	  } else {
 		return false;
 	  }
 	}
-    return true;
+	return true;
   }
   
   private boolean parseId(Token token) { //parse the ID
@@ -82,23 +84,48 @@ public class Parser {
   
   private boolean parseExpression(Token token) { // parse the expression
 	boolean f = false;
+	int x = 1;
 	while (index < allTokens.size() && token.getType() != "EOF") { //index must within the list size and token's type shouldn't be EOF
-	  if (token.getType() == "ID" || token.getType() == "INT") { // parse if token is ID or INt
+	  if (token.getType() == "ID" || token.getType() == "INT") { // parse if token is ID or INT
 		token = nextToken(); // start to parse the next token
 		f = true;
-		if (token.getType() == "PLUS") { // if it is +
+		if (token.getType() == "PLUS" || token.getType() == "MULTI" || token.getType() == "MINUS") { // if it is + * /
 		  token = putToken(); // parse the previous token
 		  if (token.getType() == "ID" && symbolTable.getAddress(token.getValue()) == -1) { // if ID is not in symbolTable
 			s = "Error: Identifier not defined, line " + String.valueOf(token.getLine());
 			return false;
 		  } else if (token.getType() == "ID" && symbolTable.getAddress(token.getValue()) != -1) { //add another else if for valid ID
 			bi.generate(ByteCodeInterpreter.LOAD, symbolTable.getAddress(token.getValue())); // add command to the bytecode arraylist for ID
+			Token next = allTokens.get(index + 1);
+			Token prev = allTokens.get(index - 1);
+			if (prev.getType() == "MULTI" || next.getType() == "MULTI") {
+			  bi.remove();
+			  x *= bi.getMemory().get(symbolTable.getAddress(token.getValue()));
+			} else if (next.getType() == "PLUS" && x != 1) {
+			  bi.generate(ByteCodeInterpreter.LOADI, x);
+			  x = 1;
+			} else if (prev.getType() == "MINUS") {
+			  bi.remove();
+			  bi.generate(ByteCodeInterpreter.LOADI, bi.getMemory().get(symbolTable.getAddress(token.getValue())) * -1);
+			}
 			token = nextToken();
-			continue;
-		  } else { // if token is INT
+		  } else if (token.getType() == "INT") { // if token is INT
 			bi.generate(ByteCodeInterpreter.LOADI, Integer.parseInt(token.getValue()));// add command to the bytecode arraylist for INT
+			Token next = allTokens.get(index + 1);
+			Token prev = allTokens.get(index - 1);
+			if (prev.getType() == "MULTI" || next.getType() == "MULTI") {
+			  bi.remove();
+			  x *= Integer.parseInt(token.getValue());
+			} else if (next.getType() == "PLUS" && x != 1) {
+			  bi.generate(ByteCodeInterpreter.LOADI, x);
+			  x = 1;
+			} else if (prev.getType() == "MINUS") {
+			  bi.remove();
+			  bi.generate(ByteCodeInterpreter.LOADI, Integer.parseInt(token.getValue()) * -1);
+			}
 			token = nextToken();
-			continue;
+		  } else {
+			token = nextToken();
 		  }
 		} else if (token.getType() == "ID") { // if it is ID
 		  token = putToken(); // parse the previous token
@@ -107,9 +134,35 @@ public class Parser {
 			return false;
 		  } else if (token.getType() == "ID" && symbolTable.getAddress(token.getValue()) != -1) {
 			bi.generate(ByteCodeInterpreter.LOAD, symbolTable.getAddress(token.getValue()));// add command to the bytecode arraylist for ID
+			Token next = allTokens.get(index + 1);
+			Token prev = allTokens.get(index - 1);
+			if (prev.getType() == "MULTI" || next.getType() == "MULTI") {
+			  bi.remove();
+			  x *= bi.getMemory().get(symbolTable.getAddress(token.getValue()));
+			} else if (next.getType() == "PLUS" && x != 1) {
+			  bi.generate(ByteCodeInterpreter.LOADI, x);
+			  x = 1;
+			} else if (prev.getType() == "MINUS") {
+			  bi.remove();
+			  bi.generate(ByteCodeInterpreter.LOADI, bi.getMemory().get(symbolTable.getAddress(token.getValue())) * -1);
+			}
 			return true;
-		  } else {// if token is INT
+		  } else if (token.getType() == "INT") {// if token is INT
 			bi.generate(ByteCodeInterpreter.LOADI, Integer.parseInt(token.getValue()));// add command to the bytecode arraylist for INT
+			Token next = allTokens.get(index + 1);
+			Token prev = allTokens.get(index - 1);
+			if (prev.getType() == "MULTI" || next.getType() == "MULTI") {
+			  bi.remove();
+			  x *= Integer.parseInt(token.getValue());
+			} else if (next.getType() == "PLUS" && x != 1) {
+			  bi.generate(ByteCodeInterpreter.LOADI, x);
+			  x = 1;
+			} else if (prev.getType() == "MINUS") {
+			  bi.remove();
+			  bi.generate(ByteCodeInterpreter.LOADI, Integer.parseInt(token.getValue()) * -1);
+			}
+			return true;
+		  } else {
 			return true;
 		  }
 		} else if (token.getType() == "EOF") {//if it is the end of file
@@ -119,22 +172,50 @@ public class Parser {
 			return false;
 		  } else if (token.getType() == "ID" && symbolTable.getAddress(token.getValue()) != -1) {
 			bi.generate(ByteCodeInterpreter.LOAD, symbolTable.getAddress(token.getValue()));// add command to the bytecode arraylist for ID
+			Token next = allTokens.get(index + 1);
+			Token prev = allTokens.get(index - 1);
+			System.out.println(symbolTable.getAddress(token.getValue()));
+			if (prev.getType() == "MULTI" || next.getType() == "MULTI") {
+			  bi.remove();
+			  x *= bi.getMemory().get(symbolTable.getAddress(token.getValue()));
+			} else if (next.getType() == "PLUS" && x != 1) {
+			  bi.generate(ByteCodeInterpreter.LOADI, x);
+			  x = 1;
+			} else if (prev.getType() == "MINUS") {
+			  bi.remove();
+			  bi.generate(ByteCodeInterpreter.LOADI, bi.getMemory().get(symbolTable.getAddress(token.getValue())) * -1);
+			}
 			token = nextToken();
-			continue;
-		  } else {// if token is INT
+		  } else if (token.getType() == "INT") {// if token is INT
 			bi.generate(ByteCodeInterpreter.LOADI, Integer.parseInt(token.getValue()));// add command to the bytecode arraylist for INT
+			Token next = allTokens.get(index + 1);
+			Token prev = allTokens.get(index - 1);
+			if (prev.getType() == "MULTI" || next.getType() == "MULTI") {
+			  bi.remove();
+			  x *= Integer.parseInt(token.getValue());
+			} else if (next.getType() == "PLUS" && x != 1) {
+			  bi.generate(ByteCodeInterpreter.LOADI, x);
+			  x = 1;
+			} else if (prev.getType() == "MINUS") {
+			  bi.remove();
+			  bi.generate(ByteCodeInterpreter.LOADI, Integer.parseInt(token.getValue()) * -1);
+			}
 			token = nextToken();
-			continue;
+		  } else {
+			token = nextToken();
 		  }
 		} else {
 		  s = "Error: Expecting identifier or add operator, line " + String.valueOf(token.getLine());
 		  return false;
 		}
-	  } else if ((token.getType() == "PLUS") && f) { //if token is + and before it is INT or ID
+	  } else if ((token.getType() == "PLUS" || token.getType() == "MULTI" || token.getType() == "MINUS") && f) { //if token is + * / and before it is INT or ID
 		if (f) {
 		  f = false; //set the f to false
+		  if (token.getType() == "MINUS") {
+			x = -1;
+		  }
 		  token = nextToken();
-		  continue;
+		  
 		} else {
 		  s = "Error: Expecting identifier or integer, line " + String.valueOf(token.getLine());
 		  return false;
@@ -144,7 +225,10 @@ public class Parser {
 		return false;
 	  }
 	}
-	if (f) { //to see if the last thing is not +
+	if (x != 1) {
+	  bi.generate(ByteCodeInterpreter.LOADI, x);
+	}
+	if (f) { //to see if the last thing is not + * /
 	  return true;
 	} else {
 	  s = "Error: Expecting identifier or integer, line " + String.valueOf(token.getLine());
@@ -174,12 +258,12 @@ public class Parser {
   
   
   public static void main(String args[]) {
-    Parser parser = new Parser();
-    System.out.println(parser.allTokens);
-    boolean f = parser.parseProgram();
+	Parser parser = new Parser();
+	System.out.println(parser.allTokens);
+	boolean f = parser.parseProgram();
 	if (f) { // if true, print the answer
 	  System.out.println("Valid Program");
-	  parser.bi.run(); // run the interpreter
+	  //parser.bi.run(); // run the interpreter
 	  System.out.println(parser.symbolTable.toString()); // Bytecodeinterpreter answer
 	  System.out.println(parser.bi.toString());
 	} else { // if false, print the answer
